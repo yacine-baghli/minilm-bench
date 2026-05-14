@@ -1,0 +1,13 @@
+# MiniLM-Bench: Multi-head Latent Attention (MLA)
+# Low-rank KV compression with decoupled RoPE.
+# Reference: DeepSeek-V2 (2024)
+
+_base_: "base.yaml"
+
+model:
+  attention_type: "mla"
+  d_latent: 192              # Latent dim for KV compression (d_model // 4)
+  rope_head_dim: 64          # Decoupled RoPE dimension
+
+infra:
+  checkpoint_dir: "./checkpoints/mla"

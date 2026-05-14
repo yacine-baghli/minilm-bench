@@ -1,0 +1,12 @@
+# Multi-Head Attention variant
+# Standard attention: each query head has its own K/V head.
+
+_base_: base.yaml
+
+model:
+  attention_type: "mha"
+  n_heads: 12
+  n_kv_heads: 12     # MHA: n_kv_heads == n_heads
+
+infra:
+  wandb_run_name: "mha-125M"

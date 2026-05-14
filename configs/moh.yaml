@@ -1,0 +1,14 @@
+# MiniLM-Bench: Mixture-of-Head Attention (MoH)
+# MoE-style head routing with top-K selection.
+# Reference: SkyworkAI (2025)
+
+_base_: "base.yaml"
+
+model:
+  attention_type: "moh"
+  moh_top_k: 6               # Active heads per token (out of 12)
+  moh_n_shared: 1            # Always-active shared heads
+  moh_aux_loss_weight: 0.01  # Load balancing loss weight
+
+infra:
+  checkpoint_dir: "./checkpoints/moh"

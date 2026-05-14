@@ -1,0 +1,13 @@
+# Grouped-Query Attention variant
+# Groups of query heads share a single K/V head.
+# GQA-4 means 12 query heads / 4 kv heads = groups of 3.
+
+_base_: base.yaml
+
+model:
+  attention_type: "gqa"
+  n_heads: 12
+  n_kv_heads: 4      # GQA: 12 / 4 = groups of 3 query heads per KV head
+
+infra:
+  wandb_run_name: "gqa4-125M"

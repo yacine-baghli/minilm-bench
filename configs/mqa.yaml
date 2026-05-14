@@ -1,0 +1,13 @@
+# Multi-Query Attention variant
+# All query heads share a single K/V head.
+# Maximum KV cache compression, potential quality tradeoff.
+
+_base_: base.yaml
+
+model:
+  attention_type: "mqa"
+  n_heads: 12
+  n_kv_heads: 1      # MQA: all 12 query heads share 1 KV head
+
+infra:
+  wandb_run_name: "mqa-125M"

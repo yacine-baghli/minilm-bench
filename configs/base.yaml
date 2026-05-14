@@ -1,0 +1,55 @@
+# MiniLM-Bench: Base Configuration
+# All variant configs inherit from this file.
+
+# --- Model Architecture ---
+model:
+  vocab_size: 50257          # GPT-2 tokenizer vocabulary size
+  d_model: 768               # Hidden dimension
+  n_layers: 12               # Number of Transformer blocks
+  n_heads: 12                # Number of query attention heads
+  n_kv_heads: 12             # Number of key/value heads (MHA default: == n_heads)
+  d_ff_mult: 4               # FFN hidden dim multiplier (d_ff = d_model * d_ff_mult)
+  max_seq_len: 1024          # Maximum sequence length
+  dropout: 0.0               # Dropout rate (0 for pre-training)
+  rope_base: 10000.0         # RoPE base frequency
+  norm_eps: 1e-6             # RMSNorm epsilon
+  attention_type: "mha"      # One of: mha, gqa, mqa, swa
+  swa_window_size: 512       # Sliding window size (only for swa)
+
+# --- Training ---
+training:
+  batch_size: 64             # Micro-batch size per GPU
+  grad_accum_steps: 4        # Gradient accumulation steps
+  max_steps: 50000           # Total training steps
+  eval_interval: 500         # Steps between evaluations
+  eval_steps: 50             # Number of eval batches
+  log_interval: 10           # Steps between logging
+  checkpoint_interval: 2000  # Steps between checkpoints
+
+# --- Optimizer ---
+optimizer:
+  lr: 3.0e-4                 # Peak learning rate
+  min_lr: 3.0e-5             # Minimum learning rate (10% of peak)
+  weight_decay: 0.1          # Weight decay (applied to 2D params only)
+  betas: [0.9, 0.95]         # AdamW betas
+  warmup_steps: 2000         # Linear warmup steps
+  grad_clip: 1.0             # Max gradient norm
+
+# --- Data ---
+data:
+  dataset: "HuggingFaceFW/fineweb-edu-sample-10BT"
+  tokenizer: "gpt2"          # Tokenizer to use (tiktoken gpt2 encoding)
+  data_dir: "./data/tokenized"
+  num_workers: 4             # DataLoader workers
+  seq_len: 1024              # Training sequence length
+
+# --- Infrastructure ---
+infra:
+  dtype: "bfloat16"          # Training precision: bfloat16 or float16
+  compile: true              # Use torch.compile
+  device: "cuda"             # Device: cuda or cpu
+  seed: 42                   # Random seed
+  checkpoint_dir: "./checkpoints"
+  log_dir: "./logs"
+  wandb_project: "minilm-bench"
+  wandb_enabled: true

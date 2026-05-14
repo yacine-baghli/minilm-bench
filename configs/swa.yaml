@@ -1,0 +1,14 @@
+# Sliding Window Attention variant
+# Restricts attention span to a fixed window size.
+# Reduces memory from O(n^2) to O(n * w) where w = window_size.
+
+_base_: base.yaml
+
+model:
+  attention_type: "swa"
+  n_heads: 12
+  n_kv_heads: 12     # Using MHA within the window
+  swa_window_size: 512
+
+infra:
+  wandb_run_name: "swa512-125M"

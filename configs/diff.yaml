@@ -1,0 +1,14 @@
+# MiniLM-Bench: Differential Attention (DiffAttn)
+# Dual-softmax subtraction for noise cancellation.
+# Reference: Ye et al., "Differential Transformer" (Microsoft, 2024)
+
+_base_: "base.yaml"
+
+model:
+  attention_type: "diff"
+  # DiffAttn uses standard head structure — the differential
+  # mechanism operates by splitting Q/K along head_dim internally.
+  # No additional hyperparameters needed beyond the base config.
+
+infra:
+  checkpoint_dir: "./checkpoints/diff"

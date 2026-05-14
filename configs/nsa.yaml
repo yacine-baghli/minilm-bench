@@ -1,0 +1,14 @@
+# MiniLM-Bench: Native Sparse Attention (NSA)
+# 3-branch hierarchical sparsity (compress + select + window).
+# Reference: DeepSeek (2025)
+
+_base_: "base.yaml"
+
+model:
+  attention_type: "nsa"
+  nsa_block_size: 16         # Compression block size
+  nsa_top_k_blocks: 8        # Selected fine-grained blocks
+  nsa_window_size: 512       # Local sliding window size
+
+infra:
+  checkpoint_dir: "./checkpoints/nsa"
