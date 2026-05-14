@@ -32,30 +32,55 @@ Every component — RoPE, RMSNorm, SwiGLU, the training loop, checkpointing, dat
 
 All eight models share an identical backbone aligned with Llama/Mistral conventions:
 
-```
-┌─────────────────────────────────────────────┐
-│                 Transformer                  │
-│                                             │
-│  Token Embedding (weight-tied with LM head) │
-│       ↓                                     │
-│  ┌─────────────────────────────────────┐    │
-│  │        TransformerBlock × L          │    │
-│  │                                     │    │
-│  │  ┌─ RMSNorm ─→ Attention ─→ + ──┐  │    │
-│  │  │            (swappable)    ↑    │  │    │
-│  │  │            residual ──────┘    │  │    │
-│  │  │                                │  │    │
-│  │  └─ RMSNorm ─→ SwiGLU FFN ─→ + ─┘  │    │
-│  │               residual ──────┘      │    │
-│  └─────────────────────────────────────┘    │
-│       ↓                                     │
-│  RMSNorm → LM Head (logits)                │
-└─────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph Transformer["🔬 Transformer Decoder"]
+        Input["Input Tokens<br/><i>x ∈ ℤ<sup>T</sup></i>"] --> Emb["Token Embedding<br/><code>weight-tied with LM head</code>"]
+        Emb --> |"+ RoPE"| Block
 
-Positional encoding: RoPE via complex rotation (decoupled variant for MLA)
-Normalization:       RMSNorm (pre-norm placement)
-FFN activation:      SwiGLU (3 linear layers per block)
+        subgraph Block["TransformerBlock × L"]
+            direction TB
+            N1["RMSNorm"] --> Attn
+
+            subgraph Attn["⚡ Attention (swappable)"]
+                direction LR
+                A1["MHA"] ~~~ A2["GQA"] ~~~ A3["MQA"] ~~~ A4["SWA"]
+                A5["DiffAttn"] ~~~ A6["MLA"] ~~~ A7["MoH"] ~~~ A8["NSA"]
+            end
+
+            Attn --> Res1["⊕ Residual"]
+            Res1 --> N2["RMSNorm"]
+            N2 --> FFN["SwiGLU FFN<br/><code>W_gate · σ(W_up · x) → W_down</code>"]
+            FFN --> Res2["⊕ Residual"]
+        end
+
+        Block --> FinalNorm["RMSNorm"]
+        FinalNorm --> Head["LM Head → Logits<br/><i>ℝ<sup>T × V</sup></i>"]
+    end
+
+    style Attn fill:#1a1a2e,stroke:#e94560,stroke-width:3px,color:#fff
+    style Block fill:#16213e,stroke:#0f3460,stroke-width:2px,color:#fff
+    style Transformer fill:#0a0a1a,stroke:#533483,stroke-width:2px,color:#fff
+    style Emb fill:#1a1a2e,stroke:#0f3460,color:#fff
+    style N1 fill:#1a1a2e,stroke:#0f3460,color:#fff
+    style N2 fill:#1a1a2e,stroke:#0f3460,color:#fff
+    style FFN fill:#1a1a2e,stroke:#e94560,color:#fff
+    style FinalNorm fill:#1a1a2e,stroke:#0f3460,color:#fff
+    style Head fill:#1a1a2e,stroke:#533483,color:#fff
+    style Input fill:#0a0a1a,stroke:#533483,color:#fff
+    style Res1 fill:#0f3460,stroke:#0f3460,color:#fff
+    style Res2 fill:#0f3460,stroke:#0f3460,color:#fff
+    style A1 fill:#533483,stroke:#533483,color:#fff
+    style A2 fill:#533483,stroke:#533483,color:#fff
+    style A3 fill:#533483,stroke:#533483,color:#fff
+    style A4 fill:#533483,stroke:#533483,color:#fff
+    style A5 fill:#e94560,stroke:#e94560,color:#fff
+    style A6 fill:#e94560,stroke:#e94560,color:#fff
+    style A7 fill:#e94560,stroke:#e94560,color:#fff
+    style A8 fill:#e94560,stroke:#e94560,color:#fff
 ```
+
+> **Positional encoding**: RoPE via complex rotation (decoupled variant for MLA) · **Normalization**: RMSNorm (pre-norm) · **FFN**: SwiGLU (3 projections per block)
 
 ### Attention Variants: Implementation Details
 
