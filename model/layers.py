@@ -25,7 +25,7 @@ class RMSNorm(nn.Module):
     def __init__(self, d_model: int, eps: float = 1e-6) -> None:
         super().__init__()
         self.weight = nn.Parameter(torch.ones(d_model))
-        self.eps = eps
+        self.eps = float(eps)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply RMSNorm: x * rsqrt(mean(x^2) + eps) * weight."""

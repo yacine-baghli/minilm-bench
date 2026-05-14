@@ -104,6 +104,12 @@ class ModelConfig:
 
     def __post_init__(self) -> None:
         """Validate configuration."""
+        # Defensive casts — YAML sometimes parses scientific notation as strings
+        self.norm_eps = float(self.norm_eps)
+        self.rope_base = float(self.rope_base)
+        self.dropout = float(self.dropout)
+        self.moh_aux_loss_weight = float(self.moh_aux_loss_weight)
+
         assert self.d_model % self.n_heads == 0, (
             f"d_model ({self.d_model}) must be divisible by n_heads ({self.n_heads})"
         )
