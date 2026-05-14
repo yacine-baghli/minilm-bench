@@ -165,16 +165,17 @@ class Trainer:
             # Gradient accumulation
             self.optimizer.zero_grad()
             total_loss = 0.0
+            grad_accum = int(tcfg["grad_accum_steps"])
 
-            for micro_step in range(tcfg["grad_accum_steps"]):
+            for micro_step in range(grad_accum):
                 x, y = self._get_batch()
                 with torch.autocast(device_type=self.device, dtype=self.dtype, enabled=self.device == "cuda"):
                     _, loss = self.model(x, y)
-                    loss = loss / tcfg["grad_accum_steps"]
+                    loss = loss / grad_accum
 
                     # Add MoH auxiliary loss if applicable
                     if self.model_cfg.attention_type == "moh":
-                        aux = self._collect_moh_aux_loss() / tcfg["grad_accum_steps"]
+                        aux = self._collect_moh_aux_loss() / grad_accum
                         loss = loss + aux
 
                 loss.backward()
@@ -193,29 +194,30 @@ class Trainer:
             dt = self.profiler.step_end()
 
             # Logging
-            if self.step % tcfg["log_interval"] == 0:
+            log_interval = int(tcfg["log_interval"])
+            if self.step % log_interval == 0:
                 tps = self.profiler.tokens_per_second(dt)
                 lr = self.scheduler.get_last_lr()[0]
                 mem = self.profiler.peak_memory_mb()
-                log_msg = (
+                print(
                     f"step={self.step:>6d} | loss={total_loss:.4f} | "
                     f"lr={lr:.2e} | grad_norm={grad_norm:.2f} | "
                     f"tok/s={tps:,.0f} | mem={mem:,.0f}MB | dt={dt:.3f}s"
                 )
-                print(log_msg)
 
                 if self.use_wandb:
                     wandb.log({
                         "train/loss": total_loss,
                         "train/lr": lr,
-                        "train/grad_norm": float(grad_norm),
+                        "train/grad_norm": grad_norm,
                         "perf/tokens_per_sec": tps,
                         "perf/step_time_s": dt,
                         "perf/peak_memory_mb": mem,
                     }, step=self.step)
 
             # Validation
-            if self.step % tcfg.get("eval_interval", 500) == 0:
+            eval_interval = int(tcfg.get("eval_interval", 500))
+            if self.step % eval_interval == 0:
                 val_loss = self._evaluate()
                 ppl = torch.exp(torch.tensor(val_loss)).item()
                 is_best = val_loss < self.best_val_loss
@@ -236,7 +238,7 @@ class Trainer:
                 )
 
             # Periodic checkpointing
-            elif self.step % tcfg["checkpoint_interval"] == 0:
+            elif self.step % int(tcfg["checkpoint_interval"]) == 0:
                 self.ckpt_mgr.save(
                     self.model, self.optimizer, self.scheduler, self.step,
                     best_val_loss=self.best_val_loss,
@@ -259,3 +261,4 @@ class Trainer:
 
         if self.use_wandb:
             wandb.finish()
+
