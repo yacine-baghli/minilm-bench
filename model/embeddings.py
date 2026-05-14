@@ -59,7 +59,7 @@ def precompute_rope_frequencies(
     assert head_dim % 2 == 0, f"head_dim must be even, got {head_dim}"
 
     # Frequency bands: theta_i = base^(-2i/d) for i in [0, d/2)
-    freqs = 1.0 / (base ** (torch.arange(0, head_dim, 2, device=device).float() / head_dim))
+    freqs = 1.0 / (float(base) ** (torch.arange(0, head_dim, 2, device=device).float() / head_dim))
 
     # Position indices: m = [0, 1, ..., max_seq_len - 1]
     positions = torch.arange(max_seq_len, device=device).float()

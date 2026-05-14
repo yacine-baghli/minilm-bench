@@ -52,7 +52,7 @@ class MixtureOfHeadAttention(BaseAttention):
         self.top_k = min(top_k, n_heads)
         self.n_shared = n_shared
         self.n_routed = n_heads - n_shared  # Heads subject to routing
-        self.aux_loss_weight = aux_loss_weight
+        self.aux_loss_weight = float(aux_loss_weight)
 
         # Q, K, V projections (all heads computed, but only top-K used)
         self.wq = nn.Linear(d_model, n_heads * head_dim, bias=False)

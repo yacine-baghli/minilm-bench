@@ -130,7 +130,7 @@ class _RMSNorm(nn.Module):
     def __init__(self, d: int, eps: float = 1e-6) -> None:
         super().__init__()
         self.weight = nn.Parameter(torch.ones(d))
-        self.eps = eps
+        self.eps = float(eps)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps) * self.weight
+        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + float(self.eps)) * self.weight

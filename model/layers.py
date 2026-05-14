@@ -29,7 +29,7 @@ class RMSNorm(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply RMSNorm: x * rsqrt(mean(x^2) + eps) * weight."""
-        norm = x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
+        norm = x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + float(self.eps))
         return norm * self.weight
 
 
@@ -86,7 +86,7 @@ class TransformerBlock(nn.Module):
         self.ffn = SwiGLU(config.d_model, config.d_ff)
 
         # Dropout (0 for pre-training, >0 for fine-tuning)
-        self.dropout = nn.Dropout(config.dropout) if config.dropout > 0 else nn.Identity()
+        self.dropout = nn.Dropout(float(config.dropout)) if float(config.dropout) > 0 else nn.Identity()
 
     def forward(
         self,
