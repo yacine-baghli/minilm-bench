@@ -126,7 +126,7 @@ class Trainer:
             if i >= tcfg.get("eval_steps", 50):
                 break
             x, y = x.to(self.device), y.to(self.device)
-            with torch.autocast(self.device, dtype=self.dtype, enabled=self.device == "cuda"):
+            with torch.autocast(device_type=self.device, dtype=self.dtype, enabled=self.device == "cuda"):
                 _, loss = self.model(x, y)
             total_loss += loss.item()
             count += 1
@@ -168,7 +168,7 @@ class Trainer:
 
             for micro_step in range(tcfg["grad_accum_steps"]):
                 x, y = self._get_batch()
-                with torch.autocast(self.device, dtype=self.dtype, enabled=self.device == "cuda"):
+                with torch.autocast(device_type=self.device, dtype=self.dtype, enabled=self.device == "cuda"):
                     _, loss = self.model(x, y)
                     loss = loss / tcfg["grad_accum_steps"]
 
@@ -182,8 +182,9 @@ class Trainer:
 
             # Gradient clipping
             grad_norm = torch.nn.utils.clip_grad_norm_(
-                self.model.parameters(), self.cfg["optimizer"]["grad_clip"]
+                self.model.parameters(), float(self.cfg["optimizer"]["grad_clip"])
             )
+            grad_norm = float(grad_norm)
 
             self.optimizer.step()
             self.scheduler.step()
