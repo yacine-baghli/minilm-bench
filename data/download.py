@@ -32,11 +32,11 @@ def tokenize_document(text: str, enc: tiktoken.Encoding) -> list[int]:
     return tokens
 
 
-def stream_dataset(dataset_name: str, split: str = "train") -> Iterator[dict]:
+def stream_dataset(dataset_name: str, config_name: str | None = None, split: str = "train") -> Iterator[dict]:
     """Stream documents from a HuggingFace dataset without downloading fully."""
     from datasets import load_dataset
 
-    ds = load_dataset(dataset_name, split=split, streaming=True)
+    ds = load_dataset(dataset_name, name=config_name, split=split, streaming=True)
     yield from ds
 
 
@@ -62,6 +62,7 @@ def download_and_tokenize(
     shard_size: int = 100_000_000,
     encoding_name: str = "gpt2",
     max_shards: int | None = None,
+    config_name: str | None = None,
 ) -> None:
     """Download dataset, tokenize, and save as memory-mapped shards.
 
@@ -85,7 +86,7 @@ def download_and_tokenize(
     total_tokens = 0
 
     print(f"Streaming dataset: {dataset_name}")
-    for doc in stream_dataset(dataset_name):
+    for doc in stream_dataset(dataset_name, config_name=config_name):
         text = doc.get("text", "")
         if not text:
             continue
@@ -130,8 +131,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         type=str,
-        default="HuggingFaceFW/fineweb-edu-sample-10BT",
+        default="HuggingFaceFW/fineweb-edu",
     )
+    parser.add_argument("--config_name", type=str, default="sample-10BT")
     parser.add_argument("--output_dir", type=str, default="./data/tokenized")
     parser.add_argument("--shard_size", type=int, default=100_000_000)
     parser.add_argument("--encoding", type=str, default="gpt2")
@@ -144,4 +146,5 @@ if __name__ == "__main__":
         shard_size=args.shard_size,
         encoding_name=args.encoding,
         max_shards=args.max_shards,
+        config_name=args.config_name,
     )
