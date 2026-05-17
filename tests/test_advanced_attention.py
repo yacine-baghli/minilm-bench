@@ -31,7 +31,6 @@ def test_diff_attn_shape(x, freqs_cis):
 
 def test_diff_attn_lambda_initialization():
     """λ should be depth-dependent."""
-    import math
     attn0 = build_attention("diff", d_model=D, n_heads=N_HEADS, n_kv_heads=N_HEADS, head_dim=HEAD_DIM, layer_idx=0)
     attn5 = build_attention("diff", d_model=D, n_heads=N_HEADS, n_kv_heads=N_HEADS, head_dim=HEAD_DIM, layer_idx=5)
     # Layer 0 should have smaller λ than layer 5 (formula increases with depth)
