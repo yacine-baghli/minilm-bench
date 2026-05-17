@@ -2,7 +2,6 @@
 
 import pytest
 import torch
-from model.config import ModelConfig
 from model.attention import build_attention
 from model.embeddings import precompute_rope_frequencies
 

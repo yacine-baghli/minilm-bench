@@ -14,13 +14,11 @@ except ImportError:
 
 import json
 import torch
-import numpy as np
 from pathlib import Path
 
 from model.config import ModelConfig
 from model.transformer import Transformer
-from model.utils import count_parameters
-from eval.compare import estimate_kv_cache_per_token, RunMetrics
+from eval.compare import estimate_kv_cache_per_token
 from viz.attention_maps import AttentionExtractor
 
 

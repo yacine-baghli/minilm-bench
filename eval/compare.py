@@ -7,15 +7,9 @@ plots, and statistical summaries.
 
 import json
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
-
-import torch
-import numpy as np
+from dataclasses import dataclass, asdict
 
 from model.config import ModelConfig
-from model.transformer import Transformer
-from model.utils import count_parameters
-from eval.perplexity import evaluate_perplexity
 
 
 @dataclass

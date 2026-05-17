@@ -1,0 +1,9 @@
+[lint]
+select = ["E", "F"]
+ignore = ["E402", "E501", "E701", "E702", "E741"]
+
+[lint.per-file-ignores]
+"colab_train.py" = ["F401", "E402"]
+"scripts/*" = ["F401"]
+
+exclude = ["*.ipynb"]

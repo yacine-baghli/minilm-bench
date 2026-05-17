@@ -4,7 +4,6 @@ Training curve plotting utilities.
 Generates publication-quality plots from training logs or W&B exports.
 """
 
-import json
 from pathlib import Path
 
 import numpy as np

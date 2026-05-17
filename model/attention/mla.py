@@ -17,7 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from model.attention.base import BaseAttention
-from model.embeddings import apply_rope, precompute_rope_frequencies
+from model.embeddings import apply_rope
 
 
 class MultiHeadLatentAttention(BaseAttention):

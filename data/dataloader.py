@@ -5,9 +5,7 @@ Reads tokenized .bin shards via np.memmap for zero-copy access.
 Produces (input, target) pairs where target = input shifted by 1 position.
 """
 
-import os
 from pathlib import Path
-from typing import Iterator
 
 import numpy as np
 import torch

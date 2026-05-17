@@ -1,6 +1,5 @@
 """Tests for checkpoint save/resume consistency."""
 
-import pytest
 import torch
 import tempfile
 from model.config import ModelConfig

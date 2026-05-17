@@ -6,11 +6,8 @@ with token labels, and supports side-by-side variant comparison.
 """
 
 import torch
-import torch.nn as nn
-import numpy as np
 
 from model.transformer import Transformer
-from model.config import ModelConfig
 
 
 class AttentionExtractor:

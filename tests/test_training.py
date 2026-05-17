@@ -6,7 +6,6 @@ to verify the full pipeline (model → optimizer → grad accum → loss → che
 
 import pytest
 import torch
-import tempfile
 import numpy as np
 from pathlib import Path
 
@@ -87,15 +86,15 @@ def test_training_loop_smoke(attn_type, tmp_path):
                     loss = loss + block.attention.aux_loss
 
         loss.backward()
-        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
         scheduler.step()
         optimizer.zero_grad()
         losses.append(loss.item())
 
     # Verify loss is finite and decreasing or reasonable
-    assert all(np.isfinite(l) for l in losses), f"Non-finite losses for {attn_type}: {losses}"
-    print(f"  {attn_type}: losses={[f'{l:.3f}' for l in losses]}")
+    assert all(np.isfinite(val) for val in losses), f"Non-finite losses for {attn_type}: {losses}"
+    print(f"  {attn_type}: losses={[f'{val:.3f}' for val in losses]}")
 
     # Verify checkpoint save/load roundtrip
     ckpt_dir = str(tmp_path / f"ckpt_{attn_type}")
@@ -128,6 +127,6 @@ def test_lr_schedule_warmup_and_decay():
     # Warmup: LR should increase
     assert lrs[0] < lrs[4], f"LR should increase during warmup: {lrs[:5]}"
     # Peak at end of warmup
-    assert lrs[4] > lrs[10], f"LR should decay after warmup"
+    assert lrs[4] > lrs[10], "LR should decay after warmup"
     # Final LR should be near min_lr (10% of peak)
     assert lrs[-1] < lrs[5], f"LR should be lower at end: {lrs[-1]} vs {lrs[5]}"

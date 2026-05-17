@@ -4,7 +4,6 @@ Utility functions for model initialization and inspection.
 
 import math
 
-import torch
 import torch.nn as nn
 
 from model.config import ModelConfig

@@ -10,9 +10,7 @@ Usage:
                             --shard_size 100_000_000
 """
 
-import os
 import argparse
-import struct
 from pathlib import Path
 from typing import Iterator
 

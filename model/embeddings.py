@@ -5,8 +5,6 @@ RoPE (Su et al., 2021) encodes position via rotation of Q/K vectors.
 Key advantage: relative position encoding that extrapolates to unseen lengths.
 """
 
-import math
-
 import torch
 import torch.nn as nn
 
