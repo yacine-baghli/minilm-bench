@@ -165,7 +165,7 @@ Forward + backward pass timing on the same GPU (batch=4, seq_len=1024):
 
 ### Key Findings
 
-1. **MHA remains the quality baseline** at small scale — its full expressiveness is hard to beat with only 59M parameters and 5K steps. This is consistent with the literature: KV compression methods show their advantage at larger scales.
+1. **MHA remains the quality baseline at small scale** — its full expressiveness is hard to beat with only 59M parameters and 5K steps. This is consistent with the literature: KV compression methods show their advantage at larger scales.
 
 2. **GQA achieves the best quality/efficiency tradeoff**: only 3% perplexity degradation for 75% KV cache reduction and slightly faster throughput than MHA. This validates why Llama 2/3 and Mistral adopted GQA.
 
@@ -176,6 +176,32 @@ Forward + backward pass timing on the same GPU (batch=4, seq_len=1024):
 5. **Advanced variants (DiffAttn, MLA, MoH) underperform at this scale** — their architectural overhead (dual attention maps, latent compression, routing) requires more training tokens and larger models to amortize. This is a known phenomenon: DiffAttn's original paper reports gains starting at 3B parameters.
 
 6. **DiffAttn is the most memory-hungry** (9.2 GB vs 6.1 GB for MHA) due to materializing two full attention matrices. Its 1.5× slower throughput reflects this doubled computation.
+
+### Discussion: Why Advanced Variants Underperform at 59M
+
+The results reveal a clear pattern: **simpler attention mechanisms dominate at small scale**. This is not a failure of advanced variants — it's a fundamental consequence of scaling laws. Understanding *why* is more instructive than the raw numbers:
+
+**DiffAttn (PPL 71.27, +15%)** computes two independent softmax distributions and subtracts them, producing attention weights that can be *negative*. This noise-canceling property requires sufficient model capacity to learn which patterns should cancel. At 59M parameters, the model lacks the expressiveness to exploit this degree of freedom — the dual attention maps simply double the computation without providing enough quality benefit. The original paper (Ye et al., 2024) reports DiffAttn matching MHA at 830M parameters and surpassing it at 3B+.
+
+**MLA (PPL 71.40, +15%)** compresses KV representations through a low-rank bottleneck (`d_latent=128`, a 4× compression from `d_model=512`). While this achieves an 81% KV cache reduction, the compression is lossy at small scale — the model doesn't have enough layers to compensate for information discarded in the bottleneck. DeepSeek-V2 uses MLA at 236B parameters where the latent space is rich enough to preserve critical information.
+
+**MoH (PPL 69.22, +12%)** adds a learned router that selects top-K heads per token. The router itself requires training signal to learn meaningful specialization, and the load-balancing auxiliary loss competes with the primary language modeling objective. At 5K training steps, the router hasn't converged to useful routing patterns. With longer training, MoH's quality would be expected to approach MHA while maintaining its throughput advantage.
+
+**The core insight**: advanced attention mechanisms introduce inductive biases that *amortize at scale*. They trade parameter efficiency or computational patterns that only pay off when the model has enough capacity to exploit them. At 59M parameters, the overhead-to-benefit ratio is unfavorable.
+
+### Limitations & Caveats
+
+This benchmark is a controlled ablation study. Like any experiment, its conclusions are bounded by its design choices:
+
+| Limitation | Impact | Mitigation |
+|-----------|--------|-----------|
+| **Single seed** | Small PPL differences (e.g., MHA vs SWA: 1.2%) may not be statistically significant | Gaps >5% (MQA, MoH, DiffAttn, MLA) are large enough to be reliable |
+| **Undertrained models** | 655M tokens seen vs Chinchilla-optimal ~1.2B for 59M params | Relative rankings are still meaningful; all variants are equally undertrained |
+| **Small scale (59M)** | Advanced variants are designed for 1B+ models | This is the *point*: we show that simplicity wins at small scale, matching published findings |
+| **Short context (1024)** | SWA's window covers most/all context; NSA's sparse patterns can't activate | Longer sequences (4K+) would better differentiate SWA and enable NSA comparison |
+| **No downstream evaluation** | Perplexity doesn't always correlate with task performance | Standard practice for pre-training comparisons; downstream eval requires fine-tuning |
+
+> **On scientific honesty**: these limitations don't invalidate the results — they *scope* them. A benchmark at 59M parameters tells you about attention mechanism behavior at 59M parameters. Extrapolating to 70B would require running at 70B. The value of this study is in demonstrating the methodology, implementing all variants from scratch, and providing a reproducible framework for future scaling experiments.
 
 ---
 
